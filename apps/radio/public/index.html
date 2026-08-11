@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radio Studio — Smart 1 Marketing</title>
+<meta name="description" content="Build, cast, record and package streaming radio commercials for Smart 1 Marketing clients.">
+<link rel="stylesheet" href="/radio/css/theme.css">
+</head>
+<body>
+
+<header class="rack">
+  <div class="rack-inner">
+    <div class="brandmark">
+      <span class="one">S1</span>
+      <span class="rest">Radio Studio</span>
+      <span class="sub" id="projectSlug">new session</span>
+    </div>
+    <nav class="rack-links">
+      <a href="/radio/how-it-works.html">How it works</a><a href="/radio/library.html">Library</a>
+      <a href="/radio/diagnostics.html">Diagnostics</a><button id="signOut" class="linkout" type="button">Sign out</button>
+    </nav>
+    <div class="onair" id="onair"><span class="lamp"></span><span id="onairText">Standby</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="tuner">
+    <div class="dial" id="dial" role="progressbar" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1" aria-label="Build progress">
+      <div class="dial-ticks"></div>
+      <div class="dial-band" id="dialBand"></div>
+      <div class="dial-needle" id="dialNeedle"></div>
+      <div class="dial-stations" id="dialStations"></div>
+    </div>
+  </div>
+
+  <section id="stage" class="stack"></section>
+</main>
+
+<script type="module" src="/radio/js/app.js"></script>
+</body>
+</html>

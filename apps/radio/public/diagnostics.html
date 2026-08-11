@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostics — Smart 1 Radio Studio</title>
+<link rel="stylesheet" href="/radio/css/theme.css">
+</head>
+<body>
+<header class="rack">
+  <div class="rack-inner">
+    <div class="brandmark"><span class="one">S1</span><span class="rest">Radio Studio</span><span class="sub">diagnostics</span></div>
+    <nav class="rack-links"><a href="/radio/">Studio</a><a href="/radio/how-it-works.html">How it works</a><a href="/radio/library.html">Library</a></nav>
+    <a class="statusdot" id="s1status" href="/radio/diagnostics.html" title="System status"><i></i><span>Checking…</span></a>
+    <div class="onair" id="onair"><span class="lamp"></span><span id="onairText">Standby</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="panel">
+    <div class="eyebrow">Signal check</div>
+    <h1>Diagnostics</h1>
+    <p class="muted small">Every service the studio depends on, tested live. Anything red here will show up as a failure mid-build.</p>
+    <div class="actions">
+      <button class="btn" id="run">Run the checks</button>
+      <button class="btn ghost" id="testOpp">Test opportunity webhook</button>
+      <button class="btn ghost" id="testApp">Test approval webhook</button>
+      <button class="btn ghost" id="testSpeech">Test the pronunciation pass</button>
+      <button class="btn ghost" id="testBanner">Test banner compositing</button>
+    </div>
+    <div id="checks" style="margin-top:18px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Runtime</div>
+    <h2>What's configured</h2>
+    <div id="runtime" class="small muted">Run the checks to load.</div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Recent</div>
+    <h2>Error log</h2>
+    <p class="muted small">The last few hundred warnings and failures, newest first.</p>
+    <div class="actions"><button class="btn ghost sm" id="reload">Reload log</button><button class="btn danger sm" id="clear">Clear</button></div>
+    <div id="logs" style="margin-top:14px"></div>
+  </div>
+</main>
+
+<script type="module">
+import { ensureAuth, esc, mountStatus } from '/js/auth.js';
+await ensureAuth(document.querySelector('main.wrap'));
+mountStatus();
+const onair = document.getElementById('onair'), onairText = document.getElementById('onairText');
+const busy = (on, label='Testing') => { onair.classList.toggle('live', on); onairText.textContent = on ? label : 'Standby'; };
+
+async function api(path, opts={}) {
+  const res = await fetch(`/radio/api${path}`, {
+    credentials: 'same-origin',
+    method: opts.method || 'GET',
+    headers: opts.body ? {'Content-Type':'application/json'} : undefined,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({ok:false, error:'Unreadable response.'}));
+  if (!data.ok) throw new Error(data.error || `Failed (${res.status}).`);
+  return data;
+}
+
+async function runChecks() {
+  const box = document.getElementById('checks');
+  box.innerHTML = '<p class="mono small muted">Testing each service…</p>';
+  busy(true);
+  try {
+    const { checks, missingKeys, runtime } = await api('/diagnostics');
+    box.innerHTML = `
+      ${missingKeys.length ? `<div class="notice bad">Not set in the environment: <span class="mono">${missingKeys.map(esc).join(', ')}</span></div>` : '<div class="notice">Every key is set.</div>'}
+      <table class="data" style="margin-top:14px">
+        <tr><th>Service</th><th>Status</th><th>Detail</th><th>Time</th></tr>
+        ${checks.map(c => `<tr>
+          <td><b>${esc(c.name)}</b></td>
+          <td><span class="tag ${c.status === 'ok' ? 'good' : 'hot'}">${c.status === 'ok' ? 'OK' : 'Error'}</span></td>
+          <td class="small">${esc(c.detail)}</td>
+          <td class="mono small">${c.ms} ms</td>
+        </tr>`).join('')}
+      </table>`;
+    document.getElementById('runtime').innerHTML = `<table class="data">${
+      Object.entries(runtime).map(([k,v]) => `<tr><th>${esc(k.replace(/([A-Z])/g,' $1'))}</th><td class="mono small">${esc(String(v))}</td></tr>`).join('')
+    }</table>`;
+  } catch (err) {
+    box.innerHTML = `<div class="notice bad">${esc(err.message)}</div>`;
+  } finally { busy(false); }
+}
+
+async function loadLogs() {
+  const box = document.getElementById('logs');
+  try {
+    const { logs } = await api('/logs?n=120');
+    box.innerHTML = logs.length
+      ? `<table class="data"><tr><th>When</th><th>Level</th><th>Where</th><th>What happened</th></tr>${
+          logs.map(l => `<tr>
+            <td class="mono small">${new Date(l.at).toLocaleTimeString()}</td>
+            <td><span class="tag ${l.level==='error'?'hot':''}">${esc(l.level)}</span></td>
+            <td class="mono small">${esc(l.scope)}</td>
+            <td class="small">${esc(l.message)}</td></tr>`).join('')}</table>`
+      : '<p class="small muted">Nothing logged. That is the good outcome.</p>';
+  } catch (err) {
+    box.innerHTML = `<div class="notice bad">${esc(err.message)}</div>`;
+  }
+}
+
+async function testHook(which) {
+  busy(true, 'Posting');
+  try {
+    const r = await api('/diagnostics/ghl-test', { method:'POST', body:{ which } });
+    alert(`GoHighLevel replied ${r.status}.\n\n${r.body}`);
+  } catch (err) { alert(err.message); }
+  finally { busy(false); loadLogs(); }
+}
+
+document.getElementById('testSpeech').addEventListener('click', async () => {
+  const text = prompt('Type a line the way it is written and see how it will be read:',
+    'Call 614-536-0768 or visit example.com to save 20% through Aug 31.');
+  if (!text) return;
+  try {
+    const { preview } = await api('/diagnostics/speech-test', { method: 'POST', body: { text } });
+    alert(preview.spoken + '\n\n' + preview.changes.map(c => `${c.from}  ->  ${c.to}  (${c.why})`).join('\n'));
+  } catch (err) { alert(err.message); }
+});
+
+document.getElementById('testBanner').addEventListener('click', async () => {
+  const box = document.getElementById('checks');
+  box.innerHTML = '<p class="mono small muted">Composing a test banner layer by layer…</p>';
+  busy(true, 'Compositing');
+  try {
+    const { steps, verdict } = await api('/diagnostics/banner-test', { method: 'POST', body: {} });
+    box.innerHTML = `
+      <div class="notice ${verdict.startsWith('Every') ? '' : 'bad'}">${esc(verdict)}</div>
+      <table class="data" style="margin-top:14px">
+        <tr><th>Layer</th><th>Result</th><th>Detail</th></tr>
+        ${steps.map(st => `<tr>
+          <td><b>${esc(st.name)}</b></td>
+          <td><span class="tag ${st.ok === true ? 'good' : st.ok === false ? 'hot' : ''}">${st.ok === true ? 'OK' : st.ok === false ? 'Failed' : 'Skipped'}</span></td>
+          <td class="small">${st.reason ? esc(st.reason) : st.url ? `<a href="${esc(st.url)}" target="_blank" rel="noopener">view</a>` : ''}</td>
+        </tr>`).join('')}
+      </table>`;
+  } catch (err) {
+    box.innerHTML = `<div class="notice bad">${esc(err.message)}</div>`;
+  } finally { busy(false); loadLogs(); }
+});
+
+document.getElementById('run').addEventListener('click', runChecks);
+document.getElementById('reload').addEventListener('click', loadLogs);
+document.getElementById('testOpp').addEventListener('click', () => testHook('opportunity'));
+document.getElementById('testApp').addEventListener('click', () => testHook('approval'));
+document.getElementById('clear').addEventListener('click', async () => {
+  await fetch('/radio/api/logs', { method:'DELETE' }); loadLogs();
+});
+
+runChecks(); loadLogs();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "knack-creative-lookup",
+  "version": "12.0.0",
+  "private": true,
+  "dependencies": { "serve": "^14.2.0" },
+  "scripts": {
+    "build": "echo 'No build needed - serving prebuilt files'",
+    "start": "serve -s build -l 3000",
+    "refresh": "node export-products.js && node export-websites.js"
+  }
+}

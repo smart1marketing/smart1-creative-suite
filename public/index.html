@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart 1 · Creative Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Same dark studio as the ad builder's staff screens — the hub is staff
+     tooling opened in the same session, and a palette switch between the
+     apps would read as leaving the suite rather than moving within it. */
+  :root{
+    --bg:#14161c; --panel:#1c1f27; --panel2:#232733; --line:#2e3342;
+    --ink:#e8eaf0; --muted:#8a90a3; --signal:#5b8def; --good:#3ec98e;
+    --warn:#e8b455; --hot:#e06060; --radio:#c98ae0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Poppins,system-ui,sans-serif}
+  a{color:var(--signal);text-decoration:none} a:hover{text-decoration:underline}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  header{display:flex;align-items:center;gap:22px;padding:14px 26px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+  .lockup{font-weight:700;letter-spacing:.4px}
+  .lockup span{color:var(--signal)}
+  nav{display:flex;gap:4px}
+  nav button{background:none;border:0;color:var(--muted);font:inherit;padding:8px 14px;border-radius:8px;cursor:pointer}
+  nav button.here{background:var(--panel2);color:var(--ink)}
+  .spacer{flex:1}
+  .dots{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+  .dots a{color:var(--muted);display:flex;align-items:center;gap:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);display:inline-block}
+  .dot.ok{background:var(--good)} .dot.bad{background:var(--hot);animation:pulse 1.4s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  main{max-width:1180px;margin:0 auto;padding:26px}
+  h1{font-size:21px;margin:0 0 4px} h2{font-size:17px;margin:26px 0 10px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tile b{display:block;font-size:22px} .tile span{color:var(--muted);font-size:12px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  input[type=search],input[type=text],input[type=url],input[type=email]{
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;color:var(--ink);
+    font:inherit;padding:9px 12px;width:100%;max-width:420px}
+  input:focus{outline:1px solid var(--signal)}
+  .btn{background:var(--signal);border:0;color:#fff;font:inherit;font-weight:600;padding:9px 16px;border-radius:9px;cursor:pointer;display:inline-block}
+  .btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .btn.radio{background:var(--radio);color:#1b1024}
+  .btn:hover{filter:brightness(1.08);text-decoration:none}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{color:var(--muted);text-align:left;font-weight:500;font-size:12px;padding:7px 10px;border-bottom:1px solid var(--line)}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr.click{cursor:pointer} tr.click:hover td{background:var(--panel2)}
+  .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;background:var(--panel2);color:var(--muted)}
+  .pill.display{background:rgba(91,141,239,.16);color:var(--signal)}
+  .pill.radio{background:rgba(201,138,224,.16);color:var(--radio)}
+  .pill.live,.pill.approved,.pill.complete{background:rgba(62,201,142,.15);color:var(--good)}
+  .pill.hot{background:rgba(224,96,96,.15);color:var(--hot)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .muted{color:var(--muted)} .small{font-size:13px}
+  .notice{background:rgba(232,180,85,.1);border:1px solid rgba(232,180,85,.4);border-radius:10px;padding:10px 14px;font-size:13px;margin:10px 0}
+  details{margin:8px 0} summary{cursor:pointer;color:var(--ink);font-weight:600}
+  .login{max-width:380px;margin:90px auto}
+  label{display:block;margin:10px 0 4px;font-size:13px;color:var(--muted)}
+  .clientmeta{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:6px 0 14px}
+  .err{color:var(--hot);font-size:13px}
+  .quick{display:flex;gap:14px;font-size:13px}
+  .quick a{color:var(--muted)} .quick a:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <div class="lockup">SMART<span>1</span> · Creative Suite</div>
+  <nav id="nav">
+    <button data-view="home" class="here">Dashboard</button>
+    <button data-view="clients">Clients</button>
+    <button data-view="new">New creative</button>
+  </nav>
+  <div class="spacer"></div>
+  <nav class="quick"><a href="/build">Ad Builder</a><a href="/radio/">Radio Studio</a><a href="/lookup">Lookup</a></nav>
+  <div class="dots" id="dots"></div>
+  <button class="btn ghost" id="signOut" style="display:none">Sign out</button>
+</header>
+<main id="stage">Loading…</main>
+
+<script>
+const stage = document.getElementById('stage');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = (n) => '$' + Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const when = (iso) => iso ? new Date(iso).toLocaleDateString() : '';
+const b64url = (o) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+
+let cfg = null;
+let view = 'home';
+let clientKey = null;
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api/hub' + path, {
+    headers: { 'content-type': 'application/json' },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error || res.statusText); e.needsLogin = data.needsLogin; throw e; }
+  return data;
+}
+
+/* ---------------- launch links (prefilled intake) ---------------- */
+
+function displayLaunch(p = {}) {
+  const q = new URLSearchParams();
+  if (p.business) q.set('business', p.business);
+  if (p.website) q.set('website', p.website);
+  if (p.contact) q.set('contact', p.contact);
+  if (p.email) q.set('email', p.email);
+  if (p.projectName) q.set('projectName', p.projectName);
+  return cfg.adBuilderUrl + '/embed' + (q.toString() ? '?' + q : '');
+}
+function radioLaunch(p = {}) {
+  const payload = {};
+  if (p.business) payload.company = p.business;
+  if (p.website) payload.homeUrl = /^https?:/.test(p.website || '') ? p.website : (p.website ? 'https://' + p.website : '');
+  if (p.contact) payload.customerName = p.contact;
+  if (p.email) payload.email = p.email;
+  if (p.projectName) payload.projectName = p.projectName;
+  return cfg.radioUrl + '/' + (Object.keys(payload).length ? '#prefill=' + b64url(payload) : '');
+  // (cfg.radioUrl is '/radio' inside the suite)
+}
+
+/* ---------------- sign in ---------------- */
+
+async function ensureAuth() {
+  try {
+    await api('/auth/me');
+    document.getElementById('signOut').style.display = '';
+    return true;
+  } catch (err) {
+    if (!err.needsLogin) { stage.innerHTML = '<p class="err">' + esc(err.message) + '</p>'; return false; }
+    stage.innerHTML = `
+      <div class="panel login">
+        <h1>Sign in</h1>
+        <p class="sub">One team password, set as DASH_PASSWORD on the service.</p>
+        <form id="loginForm">
+          <label>Your name</label><input type="text" name="who" placeholder="So the team knows who's in">
+          <label>Password</label><input type="text" name="password" style="-webkit-text-security:disc" required>
+          <p class="err" id="loginErr"></p>
+          <button class="btn" style="margin-top:12px">Open the hub</button>
+        </form>
+      </div>`;
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = Object.fromEntries(new FormData(e.target).entries());
+      try { await api('/auth/login', { method: 'POST', body: f }); location.reload(); }
+      catch (err2) { document.getElementById('loginErr').textContent = err2.message; }
+    });
+    return false;
+  }
+}
+
+/* ---------------- health dots ---------------- */
+
+async function paintDots() {
+  try {
+    const { services } = await api('/health');
+    const label = { adBuilder: 'Ad Builder', radio: 'Radio Studio', lookup: 'Lookup' };
+    const href = { adBuilder: '/build', radio: '/radio/', lookup: '/lookup' };
+    document.getElementById('dots').innerHTML = services.map((s) =>
+      `<a href="${esc(href[s.name] || '#')}" target="_blank" rel="noopener" title="${esc(s.reason || 'healthy')}">
+        <span class="dot ${s.ok ? 'ok' : 'bad'}"></span>${esc(label[s.name] || s.name)}</a>`).join('');
+  } catch { /* dots are decoration; the views report their own errors */ }
+}
+
+/* ---------------- shared renderers ---------------- */
+
+function creativeRows(list) {
+  if (!list.length) return '<p class="muted small">Nothing here yet.</p>';
+  return `<table><tr><th>Type</th><th>Client</th><th>Project</th><th>Status</th><th>Updated</th><th></th></tr>
+    ${list.map((r) => `<tr>
+      <td><span class="pill ${r.type}">${r.type === 'radio' ? 'Radio' : 'Display'}</span></td>
+      <td>${esc(r.client)}</td>
+      <td>${esc(r.name)}${r.type === 'radio' && r.spotCount ? ` <span class="muted small">· ${r.spotCount} spot${r.spotCount === 1 ? '' : 's'}</span>` : ''}${r.type === 'display' && r.adCount ? ` <span class="muted small">· ${r.adCount} ads</span>` : ''}</td>
+      <td><span class="pill ${esc(String(r.status || '').toLowerCase())}">${esc(r.status || '')}</span></td>
+      <td class="muted small">${when(r.updatedAt)}</td>
+      <td><a href="${esc(r.openUrl)}" target="_blank" rel="noopener">Open</a>${r.cloneUrl ? ` · <a href="${esc(r.cloneUrl)}" target="_blank" rel="noopener" title="Start a new radio project from these settings">Re-run</a>` : ''}</td>
+    </tr>`).join('')}</table>`;
+}
+
+const errNotice = (errors) => Object.entries(errors || {}).filter(([, v]) => v)
+  .map(([k, v]) => `<div class="notice">${esc(k)}: ${esc(v)}</div>`).join('');
+
+/* ---------------- views ---------------- */
+
+async function renderHome() {
+  stage.innerHTML = '<h1>Dashboard</h1><p class="sub">Everything the agency has in flight, across display and radio.</p><p class="muted">Loading…</p>';
+  const d = await api('/overview');
+  const c = d.counts;
+  stage.innerHTML = `
+    <h1>Dashboard</h1>
+    <p class="sub">Everything the agency has in flight, across display and radio.</p>
+    ${errNotice(d.errors)}
+    ${c ? `<div class="tiles">
+      <div class="tile"><b>${c.clients.toLocaleString()}</b><span>clients on file</span></div>
+      <div class="tile"><b>${c.liveProducts.toLocaleString()}</b><span>live products</span></div>
+      <div class="tile"><b>${money(c.liveMonthly)}</b><span>live monthly billing</span></div>
+      <div class="tile"><b>${c.activeSites.toLocaleString()}</b><span>active websites</span></div>
+    </div>` : ''}
+    <div class="row" style="margin:8px 0 4px">
+      <input type="search" id="creativeSearch" placeholder="Search all creative — client, project, campaign…">
+    </div>
+    <h2 id="creativeHead">Recent creative</h2>
+    <div id="creativeList">${creativeRows(d.recent)}</div>`;
+  const box = document.getElementById('creativeSearch');
+  let t = null;
+  box.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(async () => {
+      const q = box.value.trim();
+      document.getElementById('creativeHead').textContent = q ? `Results for “${q}”` : 'Recent creative';
+      if (!q) { const d2 = await api('/overview'); document.getElementById('creativeList').innerHTML = creativeRows(d2.recent); return; }
+      const { results, errors } = await api('/creatives?q=' + encodeURIComponent(q));
+      document.getElementById('creativeList').innerHTML = errNotice(errors) + creativeRows(results);
+    }, 350);
+  });
+}
+
+async function renderClients() {
+  stage.innerHTML = `
+    <h1>Clients</h1>
+    <p class="sub">Every client in the Knack book. Pick one to see their history and start new creative with everything pre-filled.</p>
+    <input type="search" id="clientSearch" placeholder="Client name or domain…" autofocus>
+    <div id="clientResults" style="margin-top:14px"><p class="muted small">Loading the client book…</p></div>
+    <div id="clientDetail"></div>`;
+  const paint = async (q) => {
+    try {
+      const { clients } = await api('/clients' + (q ? '?q=' + encodeURIComponent(q) : ''));
+      document.getElementById('clientResults').innerHTML = clients.length ? `
+        <table><tr><th>Client</th><th>Live</th><th>$ / month</th><th>Website</th><th>Salesperson</th></tr>
+        ${clients.map((c) => `<tr class="click" data-key="${esc(c.key)}">
+          <td>${esc(c.name)}</td>
+          <td>${c.liveCount ? `<span class="pill live">${c.liveCount} live</span>` : '<span class="muted small">—</span>'}</td>
+          <td>${c.liveMonthly ? money(c.liveMonthly) : '<span class="muted small">—</span>'}</td>
+          <td class="small">${esc(c.website?.domain || '')}</td>
+          <td class="small muted">${esc(c.sales || '')}</td>
+        </tr>`).join('')}</table>` : '<p class="muted small">No clients match.</p>';
+      document.querySelectorAll('#clientResults tr.click').forEach((tr) =>
+        tr.addEventListener('click', () => openClient(tr.dataset.key)));
+    } catch (err) {
+      document.getElementById('clientResults').innerHTML = `<div class="notice">${esc(err.message)}</div>`;
+    }
+  };
+  await paint('');
+  let t = null;
+  document.getElementById('clientSearch').addEventListener('input', (e) => {
+    clearTimeout(t); t = setTimeout(() => paint(e.target.value.trim()), 300);
+  });
+  if (clientKey) openClient(clientKey);
+}
+
+async function openClient(key) {
+  clientKey = key;
+  const holder = document.getElementById('clientDetail');
+  holder.innerHTML = '<p class="muted">Loading client…</p>';
+  let d;
+  try { d = await api('/clients/' + encodeURIComponent(key)); }
+  catch (err) { holder.innerHTML = `<div class="notice">${esc(err.message)}</div>`; return; }
+  const c = d.client;
+  const site = c.website;
+  const prefill = {
+    business: c.name,
+    website: site?.domain || site?.url || '',
+  };
+  const years = Object.keys(c.history).sort().reverse();
+  holder.innerHTML = `
+    <div class="panel" id="clientPanel">
+      <div class="row" style="justify-content:space-between">
+        <h1 style="margin:0">${esc(c.name)}</h1>
+        <div class="row">
+          <a class="btn" href="${esc(displayLaunch(prefill))}" target="_blank" rel="noopener">+ Display campaign</a>
+          <a class="btn radio" href="${esc(radioLaunch(prefill))}" target="_blank" rel="noopener">+ Radio spots</a>
+        </div>
+      </div>
+      <div class="clientmeta">
+        ${c.sales ? `<span>Sales: <b>${esc(c.sales)}</b></span>` : ''}
+        ${c.partner ? `<span>Partner: ${esc(c.partner)}</span>` : ''}
+        ${site ? `<span>Site: ${site.url ? `<a href="${esc(/^https?:/.test(site.url) ? site.url : 'https://' + site.url)}" target="_blank" rel="noopener">${esc(site.domain || site.url)}</a>` : esc(site.domain)} <span class="pill">${esc(site.platform)}</span></span>` : '<span class="muted">No website on file</span>'}
+        ${c.dash ? `<span><a href="${esc(c.dash)}" target="_blank" rel="noopener">Reporting dashboard</a></span>` : ''}
+        ${c.liveCount ? `<span class="pill live">${c.liveCount} live · ${money(c.liveMonthly)}/mo</span>` : ''}
+      </div>
+      ${errNotice(d.errors)}
+
+      ${c.live.length ? `<h2>Live right now</h2>
+      <table><tr><th>IO</th><th>Product</th><th>$ / month</th><th>Contract</th></tr>
+      ${c.live.map((r) => `<tr><td class="mono small">${esc(r.io)}</td><td>${esc(r.product)}</td><td>${money(r.monthly)}</td><td>${money(r.total)}</td></tr>`).join('')}</table>` : ''}
+
+      <h2>Creative made in the hub apps</h2>
+      <div class="grid2">
+        <div><h3 class="small" style="margin:4px 0"><span class="pill display">Display</span></h3>${creativeRows(d.displayProjects)}</div>
+        <div><h3 class="small" style="margin:4px 0"><span class="pill radio">Radio</span></h3>${creativeRows(d.radioProjects)}</div>
+      </div>
+
+      <h2>IO history</h2>
+      ${years.map((y, i) => `<details ${i === 0 ? 'open' : ''}><summary>${esc(y)} <span class="muted small">· ${c.history[y].length} line${c.history[y].length === 1 ? '' : 's'}</span></summary>
+        <table><tr><th>IO</th><th>Product</th><th>Campaign</th><th>Status</th><th>$ / month</th><th>Runs</th></tr>
+        ${c.history[y].map((r) => `<tr>
+          <td class="mono small">${esc(r.io)}</td><td>${esc(r.product)}</td><td class="small">${esc(r.campaign)}</td>
+          <td><span class="pill ${String(r.status).toLowerCase() === 'live' ? 'live' : ''}">${esc(r.status)}</span></td>
+          <td>${money(r.monthly)}</td><td class="small muted">${esc(r.start)} – ${esc(r.end)}</td>
+        </tr>`).join('')}</table>
+      </details>`).join('')}
+    </div>`;
+  holder.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderNew() {
+  stage.innerHTML = `
+    <h1>New creative</h1>
+    <p class="sub">For an existing client, start from <a href="#" id="goClients">Clients</a> — everything pre-fills from the book. For a brand-new client, start here.</p>
+    <div class="grid2">
+      <div class="panel">
+        <h2 style="margin-top:0"><span class="pill display">Display</span> Banner campaign</h2>
+        <p class="small muted">The Ad Builder intake: brand discovery from the website, AI copy, every size rendered through the QA'd template engine.</p>
+        <form id="newDisplay">
+          <label>Business name</label><input type="text" name="business" required>
+          <label>Website</label><input type="text" name="website" placeholder="yourbusiness.com">
+          <label>Project name</label><input type="text" name="projectName" placeholder="Fall Push 2026">
+          <label>Contact</label><input type="text" name="contact">
+          <label>Contact email</label><input type="email" name="email">
+          <button class="btn" style="margin-top:14px">Open in Ad Builder</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2 style="margin-top:0"><span class="pill radio">Radio</span> Streaming spots + banner</h2>
+        <p class="small muted">The Radio Studio: :15 and :30 spots, voices, music beds — and companion banners that now pass the same QA rules as display.</p>
+        <form id="newRadio">
+          <label>Business name</label><input type="text" name="business" required>
+          <label>Website</label><input type="text" name="website" placeholder="yourbusiness.com">
+          <label>Project name</label><input type="text" name="projectName" placeholder="Fall Service Push">
+          <label>Client contact</label><input type="text" name="contact">
+          <label>Client email</label><input type="email" name="email">
+          <button class="btn radio" style="margin-top:14px">Open in Radio Studio</button>
+        </form>
+      </div>
+    </div>`;
+  document.getElementById('goClients').addEventListener('click', (e) => { e.preventDefault(); go('clients'); });
+  document.getElementById('newDisplay').addEventListener('submit', (e) => {
+    e.preventDefault();
+    window.open(displayLaunch(Object.fromEntries(new FormData(e.target).entries())), '_blank');
+  });
+  document.getElementById('newRadio').addEventListener('submit', (e) => {
+    e.preventDefault();
+    window.open(radioLaunch(Object.fromEntries(new FormData(e.target).entries())), '_blank');
+  });
+}
+
+/* ---------------- shell ---------------- */
+
+function go(v) {
+  view = v;
+  document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('here', b.dataset.view === v));
+  if (v === 'home') renderHome();
+  else if (v === 'clients') renderClients();
+  else renderNew();
+}
+
+document.querySelectorAll('nav button').forEach((b) => b.addEventListener('click', () => go(b.dataset.view)));
+document.getElementById('signOut').addEventListener('click', async () => {
+  await api('/auth/logout', { method: 'POST' }).catch(() => {});
+  location.reload();
+});
+
+(async () => {
+  if (!(await ensureAuth())) return;
+  cfg = await api('/config');
+  paintDots();
+  setInterval(paintDots, 5 * 60 * 1000);
+  go('home');
+})();
+</script>
+</body>
+</html>
