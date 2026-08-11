@@ -1,0 +1,54 @@
+services:
+  - type: web
+    name: smart1-creative-suite
+    runtime: node
+    plan: starter
+    # --include=dev is required: Render sets NODE_ENV=production, which makes
+    # npm skip devDependencies — and typescript/tsx live there.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    disk:
+      name: suite-data
+      mountPath: /var/data
+      sizeGB: 2
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # ---- one disk, two app data roots -------------------------------
+      - key: OUTPUT_DIR            # ad builder renders + projects
+        value: /var/data/ads
+      - key: DATA_DIR              # radio studio projects + playlists
+        value: /var/data/radio
+      # ---- the suite's front door -------------------------------------
+      - key: DASH_PASSWORD         # hub sign-in; also accepted by /radio
+        sync: false
+      - key: STUDIO_PASSWORD       # radio studio sign-in (can equal DASH_PASSWORD)
+        sync: false
+      - key: SESSION_SECRET        # one secret signs hub AND studio cookies
+        generateValue: true
+      - key: ADMIN_TOKEN           # ad builder staff screens (/build, /projects)
+        sync: false
+      - key: PUBLIC_URL            # https://<this service>.onrender.com
+        sync: false
+      # ---- integrations (same keys the standalone apps used) ----------
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: BRANDFETCH_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: GHL_OPPORTUNITY_WEBHOOK_URL
+        sync: false
+      - key: GHL_APPROVAL_WEBHOOK_URL
+        sync: false
+      - key: GHL_APPROVAL_RESPONSE_WEBHOOK_URL
+        sync: false
+      - key: ALLOWED_FRAME_ANCESTORS   # for the embedded intake form
+        sync: false

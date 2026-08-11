@@ -1,0 +1,39 @@
+{
+  "name": "smart1-creative-suite",
+  "version": "1.0.0",
+  "description": "Smart 1 Marketing Creative Suite - the ad builder, radio studio, client lookup and hub dashboard as one service.",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p apps/ads/tsconfig.json && node apps/ads/scripts/copy-assets.mjs",
+    "start": "node server.js",
+    "dev": "npm run build && node --watch server.js",
+    "test": "tsx --test apps/ads/tests/*.test.ts",
+    "ads:assets": "tsx apps/ads/scripts/make-sample-assets.ts",
+    "lookup:refresh": "node lookup/export-products.js && node lookup/export-websites.js && node lookup/export-live-products.js"
+  },
+  "dependencies": {
+    "@fontsource/montserrat": "^5.3.0",
+    "@fontsource/open-sans": "^5.3.0",
+    "@fontsource/poppins": "^5.3.0",
+    "@types/pdfkit": "^0.17.6",
+    "cloudinary": "^2.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "ffmpeg-static": "^5.3.0",
+    "opentype.js": "^2.0.0",
+    "pdfkit": "^0.19.1",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/opentype.js": "^1.3.10",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}
