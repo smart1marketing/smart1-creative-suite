@@ -1,0 +1,61 @@
+services:
+  - type: web
+    name: smart1-radio-studio
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    disk:
+      name: studio-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+      - key: DATA_DIR
+        value: /var/data
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+      - key: OPENAI_IMAGE_MODEL
+        value: gpt-image-1
+      - key: BRANDFETCH_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_MODEL
+        value: eleven_multilingual_v2
+      - key: ELEVENLABS_MUSIC_MODEL
+        value: music_v2
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_ROOT_FOLDER
+        value: smart1-radio-studio
+      - key: CLOUDINARY_BED_FOLDER
+        value: smart1-radio-studio/music-beds
+      - key: STUDIO_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PUBLIC_URL
+        sync: false
+      - key: COOKIE_SAMESITE
+        value: Lax
+      - key: EMBED_ORIGIN
+        sync: false
+      - key: AUDIO_POST_ENABLED
+        value: "true"
+      - key: AUDIO_TARGET_LUFS
+        value: "-16"
+      - key: GHL_APPROVAL_RESPONSE_WEBHOOK_URL
+        sync: false
+      - key: GHL_OPPORTUNITY_WEBHOOK_URL
+        sync: false
+      - key: GHL_APPROVAL_WEBHOOK_URL
+        sync: false

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library — Smart 1 Radio Studio</title>
+<link rel="stylesheet" href="/radio/css/theme.css">
+</head>
+<body>
+<header class="rack">
+  <div class="rack-inner">
+    <div class="brandmark"><span class="one">S1</span><span class="rest">Radio Studio</span><span class="sub">library</span></div>
+    <nav class="rack-links"><a href="/radio/">Studio</a><a href="/radio/how-it-works.html">How it works</a><a href="/radio/diagnostics.html">Diagnostics</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="panel">
+    <div class="eyebrow">Everything we've cut</div>
+    <h1>Playlist library</h1>
+    <p class="muted small">Every project that made it to a playlist. Search by client, business, project or the team member who ran it.</p>
+    <label class="field"><span class="lbl">Search</span><input type="search" id="q" placeholder="Greenwald Realty, Fall Push, Dana…" autofocus></label>
+  </div>
+  <div id="results"></div>
+</main>
+
+<script type="module">
+import { ensureAuth, esc } from '/js/auth.js';
+const results = document.getElementById('results');
+await ensureAuth(results);
+
+async function load(q='') {
+  results.innerHTML = '<div class="panel flat"><p class="small muted mono">Searching…</p></div>';
+  try {
+    const res = await fetch(`/radio/api/library?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    if (!data.results.length) {
+      results.innerHTML = `<div class="panel"><h2>Nothing here yet</h2><p class="muted small">${q ? 'No playlist matches that search.' : 'Playlists show up here once a commercial is approved in the listening room.'}</p><a class="btn" href="/radio/">Build one</a></div>`;
+      return;
+    }
+    results.innerHTML = data.results.map(r => `
+      <div class="panel">
+        <div class="eyebrow">${esc(r.projectNumber || '')} · ${esc(r.teamMember || '')} · ${new Date(r.createdAt).toLocaleDateString()}</div>
+        <h2>${esc(r.company || r.customerName)}</h2>
+        <p class="small muted">${esc(r.projectName)} — ${r.spotCount} spot${r.spotCount === 1 ? '' : 's'} · ${esc(r.customerName)}, ${esc(r.email)}</p>
+        <div class="tags" style="margin:10px 0">
+          ${(r.tones||[]).map(t => `<span class="tag">${esc(t.replace(/_/g,' '))}</span>`).join('')}
+          <span class="tag ${r.status === 'client-approved' ? 'good' : r.status === 'changes-requested' ? 'hot' : ''}">${esc(String(r.status).replace(/-/g,' '))}</span>
+          ${r.reviewDecision ? `<span class="tag ${r.reviewDecision === 'approved' ? 'good' : 'hot'}">client ${esc(r.reviewDecision)}</span>` : ''}
+        </div>
+        ${r.cloudinaryFolder ? `<p class="small mono muted">${esc(r.cloudinaryFolder)}</p>` : ''}
+        <div class="actions">
+          <a class="btn ghost sm" href="${esc(r.homeUrl || '#')}" target="_blank" rel="noopener">Client site</a>
+          <button class="btn sm" data-open="${esc(r.projectId)}">See the spots</button>
+          <a class="btn ghost sm" href="/radio/#p=${esc(r.projectId)}&s=6">Edit this project</a>
+          <a class="btn sm" href="/radio/#clone=${esc(r.projectId)}">Clone this project</a>
+        </div>
+        <div data-detail="${esc(r.projectId)}"></div>
+      </div>`).join('');
+
+    results.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openProject(b.dataset.open)));
+  } catch (err) {
+    results.innerHTML = `<div class="panel"><div class="notice bad">${esc(err.message)}</div></div>`;
+  }
+}
+
+async function openProject(projectId) {
+  const box = document.querySelector(`[data-detail="${CSS.escape(projectId)}"]`);
+  if (box.dataset.loaded) { box.innerHTML = ''; delete box.dataset.loaded; return; }
+  box.innerHTML = '<p class="small muted mono">Loading…</p>';
+  const res = await fetch(`/radio/api/projects/${projectId}`);
+  const data = await res.json();
+  if (!data.ok) return (box.innerHTML = `<div class="notice bad">${esc(data.error)}</div>`);
+  const p = data.project;
+  box.dataset.loaded = '1';
+  box.innerHTML = `
+    <p class="small muted" style="margin-top:14px"><b>Offer:</b> ${esc(p.analysis?.offer || p.customer.promotion || '—')}</p>
+    ${p.playlist.map(i => `
+      <div class="rowcard">
+        ${i.bannerUrl ? `<img class="thumb" src="${esc(i.bannerUrl)}" alt="Companion banner">` : ''}
+        <div style="flex:1">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+            <span class="timecode${i.seconds === 30 ? ' alt' : ''}">:${i.seconds}</span>
+            <b>${esc(i.toneLabel)}</b><span class="tag">${esc(i.voiceName||'')}</span>
+          </div>
+          <p class="small">${esc(i.script)}</p>
+          <audio controls preload="none" src="${esc(i.audioUrl)}"></audio>
+        </div>
+      </div>`).join('')}`;
+}
+
+let t;
+document.getElementById('q').addEventListener('input', e => {
+  clearTimeout(t); t = setTimeout(() => load(e.target.value), 300);
+});
+load();
+</script>
+</body>
+</html>

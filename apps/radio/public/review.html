@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review your radio spots</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/radio/css/theme.css">
+</head>
+<body>
+
+<header class="rack">
+  <div class="rack-inner">
+    <div class="brandmark">
+      <span class="one">S1</span><span class="rest">Radio Studio</span>
+      <span class="sub" id="who">for review</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="stage" class="stack"></section>
+</main>
+
+<script type="module">
+const esc = (s='') => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const stage = document.getElementById('stage');
+
+// The link carries its own credential: #<projectId>.<token>
+const [projectId, token] = location.hash.replace(/^#/, '').split('.');
+
+function bad(message) {
+  stage.innerHTML = `<div class="panel"><div class="eyebrow">Review</div><h2>This link didn't open</h2>
+    <p class="muted small">${esc(message)}</p></div>`;
+}
+
+async function load() {
+  if (!projectId || !token) return bad('The link looks incomplete. Ask your Smart 1 contact to resend it.');
+  stage.innerHTML = '<div class="panel"><p class="small muted mono">Loading your spots…</p></div>';
+  try {
+    const res = await fetch(`/radio/api/review/${encodeURIComponent(projectId)}?token=${encodeURIComponent(token)}`);
+    const data = await res.json();
+    if (!data.ok) return bad(data.error);
+    paint(data.review);
+  } catch (err) {
+    bad(err.message);
+  }
+}
+
+function paint(r) {
+  document.getElementById('who').textContent = `${r.company} · ${r.projectName}`;
+  const decided = r.decision;
+
+  stage.innerHTML = `
+    <div class="panel">
+      ${r.logo ? `<img src="${esc(r.logo)}" alt="${esc(r.company)}" style="max-width:170px;background:#fff;padding:10px;border-radius:8px;margin-bottom:16px">` : ''}
+      <div class="eyebrow">Ready for your approval</div>
+      <h1>${esc(r.projectName)}</h1>
+      <p class="muted">${esc(r.company)} — ${r.spots.length} spot${r.spots.length === 1 ? '' : 's'} produced by ${esc(r.teamMember)} at Smart 1 Marketing.</p>
+      ${r.offer ? `<p class="small muted"><b>Offer:</b> ${esc(r.offer)}</p>` : ''}
+      ${r.comments ? `<div class="notice" style="margin-top:12px"><b>From ${esc(r.teamMember)}:</b> ${esc(r.comments)}</div>` : ''}
+    </div>
+
+    ${r.spots.map((s, i) => `
+      <div class="panel">
+        <div class="slug" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <span class="timecode${s.seconds === 30 ? ' alt' : ''}">:${s.seconds}</span>
+          <b>${esc(s.toneLabel)}</b>
+          <span class="tag">${esc(s.voiceName || '')}</span>
+          ${s.measuredSeconds ? `<span class="tag mono">${Number(s.measuredSeconds).toFixed(1)}s</span>` : ''}
+        </div>
+        <audio controls preload="none" src="${esc(s.audioUrl)}"></audio>
+        <p class="copy" style="font-size:1rem;margin-top:14px">${esc(s.script)}</p>
+        ${s.bannerUrl ? `
+          <h3 style="margin-top:18px">Companion banner</h3>
+          <p class="small muted">Shown on the listener's screen while the spot plays. Tapping it opens ${esc(r.clickThroughUrl || 'your site')}.</p>
+          <img src="${esc(s.bannerUrl)}" alt="Companion banner" style="border-radius:8px;border:1px solid var(--edge);max-width:300px;width:100%">` : ''}
+      </div>`).join('')}
+
+    <div class="panel" id="decisionPanel">
+      ${decided ? decisionMarkup(decided) : `
+        <div class="eyebrow">Your call</div>
+        <h2>How do these sound?</h2>
+        <p class="muted small">Approve them and we'll schedule the flight. Or tell us what to change — be as specific as you like and we'll re-cut them.</p>
+        <form id="decisionForm">
+          <label class="field"><span class="lbl">Your name</span><input type="text" name="by" placeholder="Dana Whitfield"></label>
+          <label class="field"><span class="lbl">Comments</span><textarea name="comments" placeholder="Required if you're asking for changes. Optional if you're approving."></textarea></label>
+          <div class="actions">
+            <button class="btn ghost" type="button" id="changesBtn">Request changes</button>
+            <span class="spacer"></span>
+            <button class="btn vu" type="button" id="approveBtn">Approve these spots</button>
+          </div>
+        </form>
+        <div id="decisionError"></div>`}
+    </div>`;
+
+  if (!decided) {
+    document.getElementById('approveBtn').addEventListener('click', () => decide('approved'));
+    document.getElementById('changesBtn').addEventListener('click', () => decide('changes'));
+  }
+}
+
+function decisionMarkup(d) {
+  const approved = d.outcome === 'approved';
+  return `
+    <div class="eyebrow">Recorded</div>
+    <h2>${approved ? 'Approved' : 'Changes requested'}</h2>
+    <p class="muted small">${approved
+      ? 'Thanks — Smart 1 has been notified and will schedule the flight.'
+      : 'Thanks — Smart 1 has your notes and will re-cut these.'} Sent ${new Date(d.decidedAt).toLocaleString()}.</p>
+    ${d.comments ? `<div class="notice" style="margin-top:10px">${esc(d.comments)}</div>` : ''}`;
+}
+
+async function decide(outcome) {
+  const form = document.getElementById('decisionForm');
+  const body = Object.fromEntries(new FormData(form).entries());
+  const errBox = document.getElementById('decisionError');
+  errBox.innerHTML = '';
+
+  if (outcome === 'changes' && !String(body.comments || '').trim()) {
+    errBox.innerHTML = '<div class="notice bad">Tell us what to change so we can re-cut them.</div>';
+    return;
+  }
+
+  form.querySelectorAll('button').forEach(b => (b.disabled = true));
+  try {
+    const res = await fetch(`/radio/api/review/${encodeURIComponent(projectId)}/decision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, token, outcome })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    document.getElementById('decisionPanel').innerHTML = decisionMarkup(data.decision);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  } catch (err) {
+    errBox.innerHTML = `<div class="notice bad">${esc(err.message)}</div>`;
+    form.querySelectorAll('button').forEach(b => (b.disabled = false));
+  }
+}
+
+load();
+</script>
+</body>
+</html>
